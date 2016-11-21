@@ -64,9 +64,10 @@ class StudentAI():
 			count += 1
 			if alpha > beta: return 2147483647
 		return alpha
-	def IDS_search(gameboard):
-		for depth in range(5):
-			pass
+	def IDS_search(self, gameboard, moves):
+		for depth in range(2):
+			piece = self.ab_pruning(moves, gameboard, depth)
+		return piece
 
 	def max_value(self, gameboard, alpha, beta, depth, moves):
 		count = 0
@@ -91,7 +92,7 @@ class StudentAI():
 				spaces[(i,j)] = self.model.get_space(i, j)
 
 		moves = [k for k in spaces.keys() if spaces[k] == 0]
-		return self.ab_pruning(moves, spaces, 2)
+		return self.IDS_search(spaces, moves)
 
 
 '''===================================

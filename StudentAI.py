@@ -1,16 +1,18 @@
-#Author: Toluwanimi Salako
+#Author: Ruidong Dai and Kezi Jia
 from collections import defaultdict
 import random
 import sys
+import time
 sys.path.append(r'\ConnectKSource_python')
 import ConnectKSource_python.board_model as boardmodel
 
-team_name = "StudentAI-Default" #TODO change me
+team_name = "DLLMAI" #TODO change me
 
 class StudentAI():
 	def __init__(self, player, state):
 		self.last_move = state.get_last_move()
 		self.model = state
+		self.time = time.time()
 		self.player = player
 
 	def Eval(self, gameboard):
@@ -38,16 +40,32 @@ class StudentAI():
 						score[player-1] += pow(10, streak)
 		return score[0] - score[1] if self.player == 1 else score[1] - score[0]
 
+	def IDS_search(self, gameboard, moves, max_depth):
+		for depth in range(max_depth):
+			piece = self.ab_pruning(moves,gameboard, depth)
+			cur_time = time.time()
+			if(cur_time - self.time >= 4.999):
+				print(">>>>>>>>>>>>>>>>>> ", cur_time - self.time, " seconds <<<<<<<<<<<<<<<<<<<<")
+				return piece
+		cur_time = time.time()
+		print(">>>>>>>>>>>>>>>>>> ", cur_time - self.time, " seconds <<<<<<<<<<<<<<<<<<<<")
+		return piece
+
 	def ab_pruning(self, moves, gameboard, depth):
 		alpha = -2147483648
 		beta = 2147483647
 		piece = None
 		count = 0
 		while count < len(moves):
-		# 	# print(moves[0])
+			cur_time = time.time()
+			if(cur_time - self.time >= 4.999):
+				return piece
 			move = moves.pop(0)
 			gameboard[move] = self.player
 			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth - 1, moves), move) if depth != 0 else (self.Eval(gameboard), move))
+			# cur_time = time.time()
+			# if(cur_time - self.time >= 4.999):
+			# 	return piece
 			gameboard[move] = 0
 			moves.append(move)
 			count += 1
@@ -56,25 +74,33 @@ class StudentAI():
 	def min_value(self, gameboard, alpha, beta, depth, moves):
 		count = 0
 		while count < len(moves):
+			cur_time = time.time()
+			if(cur_time - self.time >= 4.999):
+				return alpha
 			move = moves.pop(0)
 			gameboard[move] = self.player
 			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves)) if depth != 0 else self.Eval(gameboard)
-			gameboard[move] = 0
+			cur_time = time.time()
+			# if(cur_time - self.time >= 4.999):
+			# 	return alpha
+			# gameboard[move] = 0
 			moves.append(move)
 			count += 1
 			if alpha > beta: return 2147483647
 		return alpha
-	def IDS_search(self, gameboard, moves):
-		for depth in range(2):
-			piece = self.ab_pruning(moves, gameboard, depth)
-		return piece
 
 	def max_value(self, gameboard, alpha, beta, depth, moves):
 		count = 0
 		while count < len(moves):
+			cur_time = time.time()
+			if(cur_time - self.time >= 4.999):
+				return beta
 			move = moves.pop(0)
 			gameboard[move] = self.player
 			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, moves)) if depth != 0 else self.Eval(gameboard)
+			# cur_time = time.time()
+			# if(cur_time - self.time >= 4.999):
+			# 	return beta
 			gameboard[move] = 0
 			moves.append(move)
 			count += 1
@@ -92,7 +118,7 @@ class StudentAI():
 				spaces[(i,j)] = self.model.get_space(i, j)
 
 		moves = [k for k in spaces.keys() if spaces[k] == 0]
-		return self.IDS_search(spaces, moves)
+		return self.IDS_search(spaces, moves, 2)
 
 
 '''===================================

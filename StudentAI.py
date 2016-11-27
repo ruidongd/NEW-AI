@@ -1,110 +1,99 @@
-#Author: Ruidong Dai and Kezi Jia
+#Author: Toluwanimi Salako
 from collections import defaultdict
 import random
 import sys
-import time
 sys.path.append(r'\ConnectKSource_python')
 import ConnectKSource_python.board_model as boardmodel
 
-team_name = "DLLMAI" #TODO change me
+team_name = "StudentAI-Default" #TODO change me
+DIRECTIONS = [(1,0), (1,1), (0,1), (-1,1)]
+
+def oppoPlayer(player):
+	return 1 if player == -1 else -1
 
 class StudentAI():
 	def __init__(self, player, state):
 		self.last_move = state.get_last_move()
 		self.model = state
-		self.time = time.time()
+		self.width = self.model.get_width()
+		self.height = self.model.get_height()
 		self.player = player
 
-	def Eval(self, gameboard):
-		score = [0, 0]
-		visited_piece_with_dir = dict()
-		directions = [(1,0), (1,1), (0,1), (-1,1)]
-		for m in gameboard:
-			player = gameboard[m]
-			if gameboard[m] != 0:
-				for x,y in directions:
-					streak = 0
-					if (m not in visited_piece_with_dir or (x, y) not in visited_piece_with_dir[m]):
-						if m not in visited_piece_with_dir:
-							visited_piece_with_dir[m] = [(x, y)]
-						else:
-							visited_piece_with_dir[m] += (x, y)
-						next1 = (m[0]+x, m[1]+y)
-						next2 = (m[0]-x, m[1]-y)
-						while(next1 in gameboard and gameboard[next1] == player):
-							streak += 1
-							next1 = (next1[0]+x, next1[1]+y)
-						while(next2 in gameboard and gameboard[next2] == player):
-			 				streak += 1
-			 				next2 = (next2[0]-x, next2[1]-y)
-						score[player-1] += pow(10, streak)
-		return score[0] - score[1] if self.player == 1 else score[1] - score[0]
+	def Eval(self, gameboard, move):
+		opp_fours = self.checkForStreak(gameboard, -self.player, 4)
+		opp_threes = self.checkForStreak(gameboard, -self.player, 3)
+		opp_twos = self.checkForStreak(gameboard, -self.player, 2)
+		my_fours = self.checkForStreak(gameboard, self.player, 4)
+		my_threes = self.checkForStreak(gameboard, self.player, 3)
+		my_twos = self.checkForStreak(gameboard, self.player, 2)
 
-	def IDS_search(self, gameboard, moves, max_depth):
-		for depth in range(max_depth):
-			piece = self.ab_pruning(moves,gameboard, depth)
-			cur_time = time.time()
-			if(cur_time - self.time >= 4.999):
-				print(">>>>>>>>>>>>>>>>>> ", cur_time - self.time, " seconds <<<<<<<<<<<<<<<<<<<<")
-				return piece
-		cur_time = time.time()
-		print(">>>>>>>>>>>>>>>>>> ", cur_time - self.time, " seconds <<<<<<<<<<<<<<<<<<<<")
-		return piece
+		if opp_fours > 0:
+			return -100000
+		else:
+			return my_fours*100000 + my_threes*100 + my_twos - (100*opp_threes + 10*opp_twos)
+
+	def checkForStreak(self, gameboard, player, streak):
+		count = 0
+		for pos in gameboard.keys():
+			if gameboard.get(pos) == player:
+				count += self.verticalStreak(pos, gameboard, streak)
+				count += self.horizontalStreak(pos, gameboard, streak)
+				count += self.diagonalStreak(pos, gameboard, streak)
+		return count
+	def verticalStreak(self, pos, gameboard, streak):
+		pass
+	def horizontalStreak(self, pos, gameboard, streak):
+		pass
+	def diagonalStreak(self, pos, gameboard, streak):
+		pass
+
+	def inGameboard(self, pos):
+		if(pos[0] < 0 or pos[1] < 0 or pos[0] > self.width-1 or pos[1] > self.height-1):
+			return False
+		return True
 
 	def ab_pruning(self, moves, gameboard, depth):
 		alpha = -2147483648
 		beta = 2147483647
-		piece = None
 		count = 0
+		piece = None
 		while count < len(moves):
-			cur_time = time.time()
-			if(cur_time - self.time >= 4.999):
-				return piece
 			move = moves.pop(0)
 			gameboard[move] = self.player
-			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth - 1, moves), move) if depth != 0 else (self.Eval(gameboard), move))
-			# cur_time = time.time()
-			# if(cur_time - self.time >= 4.999):
-			# 	return piece
+			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, moves, move), move))
 			gameboard[move] = 0
 			moves.append(move)
 			count += 1
 		return piece
 
-	def min_value(self, gameboard, alpha, beta, depth, moves):
+	def max_value(self, gameboard, alpha, beta, depth, moves, m):
+		if(depth == 0):
+			return self.Eval(gameboard, m)
 		count = 0
 		while count < len(moves):
-			cur_time = time.time()
-			if(cur_time - self.time >= 4.999):
-				return alpha
 			move = moves.pop(0)
 			gameboard[move] = self.player
-			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves)) if depth != 0 else self.Eval(gameboard)
-			cur_time = time.time()
-			# if(cur_time - self.time >= 4.999):
-			# 	return alpha
-			# gameboard[move] = 0
-			moves.append(move)
-			count += 1
-			if alpha > beta: return 2147483647
-		return alpha
-
-	def max_value(self, gameboard, alpha, beta, depth, moves):
-		count = 0
-		while count < len(moves):
-			cur_time = time.time()
-			if(cur_time - self.time >= 4.999):
-				return beta
-			move = moves.pop(0)
-			gameboard[move] = self.player
-			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, moves)) if depth != 0 else self.Eval(gameboard)
-			# cur_time = time.time()
-			# if(cur_time - self.time >= 4.999):
-			# 	return beta
+			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves, move))
 			gameboard[move] = 0
 			moves.append(move)
 			count += 1
-			if alpha > beta: return -2147483648
+			if(alpha >= beta):
+				return 2147483647
+		return alpha
+
+	def min_value(self, gameboard, alpha, beta, depth, moves, m):
+		if(depth == 0):
+			return self.Eval(gameboard, m)
+		count = 0
+		while count < len(moves):
+			move = moves.pop(0)
+			gameboard[move] = oppoPlayer(self.player)
+			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, moves, move))
+			gameboard[move] = 0
+			moves.append(move)
+			count += 1
+			if(alpha >= beta):
+				return -2147483647
 		return beta
 
 	def make_move(self, deadline):
@@ -116,9 +105,8 @@ class StudentAI():
 		for i in range(width):
 			for j in range(height):
 				spaces[(i,j)] = self.model.get_space(i, j)
-
 		moves = [k for k in spaces.keys() if spaces[k] == 0]
-		return self.IDS_search(spaces, moves, 2)
+		return self.ab_pruning(moves, spaces, 4)
 
 
 '''===================================

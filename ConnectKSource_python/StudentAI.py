@@ -6,6 +6,7 @@ sys.path.append(r'\ConnectKSource_python')
 import board_model as boardmodel
 
 team_name = "StudentAI-Default" #TODO change me
+DIRECTIONS = [(1,0), (1,1), (0,1), (-1,1)]
 
 def oppoPlayer(player):
 	if player == 1:
@@ -18,49 +19,78 @@ class StudentAI():
 		self.model = state
 		self.player = player
 
-	# def Eval(self, gameboard):
-	# 	return 0
+	def Eval(self, gameboard, move):
+		return 0
+		# score = [0, 0]
+		# visited_piece_with_dir = dict()
+		# for m in gameboard:
+		# 	player = gameboard[m]
+		# 	if gameboard[m] != 0:
+		# 		for x,y in DIRECTIONS:
+		# 			streak = 0
+		# 			if (m not in visited_piece_with_dir or (x, y) not in visited_piece_with_dir[m]):
+		# 				if m not in visited_piece_with_dir:
+		# 					visited_piece_with_dir[m] = [(x, y)]
+		# 				else:
+		# 					visited_piece_with_dir[m] += (x, y)
+		# 				next1 = (m[0]+x, m[1]+y)
+		# 				next2 = (m[0]-x, m[1]-y)
+		# 				while(next1 in gameboard and gameboard[next1] == player):
+		# 					streak += 1
+		# 					next1 = (next1[0]+x, next1[1]+y)
+		# 				while(next2 in gameboard and gameboard[next2] == player):
+		# 	 				streak += 1
+		# 	 				next2 = (next2[0]-x, next2[1]-y)
+		# 				score[player-1] += pow(10, streak)
+		# return score[0] - score[1] if self.player == 1 else score[1] - score[0]
+
+	# def inGameboard(self, pos):
+	# 	if (pos[0] <= self.model.get_width() and pos[0] > 0) and (pos[1] <= self.model.get_height() and pos[1] > 0):
+	# 		return True
+	# 	return False
 
 	def ab_pruning(self, moves, gameboard, depth):
 		alpha = -2147483648
 		beta = 2147483647
-		piece = None
 		count = 0
+		piece = None
 		while count < len(moves):
-			# print(moves[0])
 			move = moves.pop(0)
 			gameboard[move] = self.player
-			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth - 1, moves), move) if depth != 0 else 0
-			#(self.Eval(gameboard), move))
+			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, moves, move), move))
 			gameboard[move] = 0
 			moves.append(move)
-			count += 1
 		return piece
 
-	def min_value(self, gameboard, alpha, beta, depth, moves):
+	def max_value(self, gameboard, alpha, beta, depth, moves, m):
+		if(depth == 0):
+			return self.Eval(gameboard, m)
 		count = 0
 		while count < len(moves):
 			move = moves.pop(0)
 			gameboard[move] = self.player
-			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves)) if depth != 0 else self.Eval(gameboard)
+			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves, move))
 			gameboard[move] = 0
 			moves.append(move)
-			count += 1
-			if alpha > beta: return 2147483647
-		return alpha
+			if(alpha >= beta):
+				return 2147483647
+			return alpha
 
-	def max_value(self, gameboard, alpha, beta, depth, moves):
+	def min_value(self, gameboard, alpha, beta, depth, moves, m):
+		if(depth == 0):
+			return self.Eval(gameboard, m)
 		count = 0
 		while count < len(moves):
 			move = moves.pop(0)
 			gameboard[move] = self.player
-			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, moves)) if depth != 0 else self.Eval(gameboard)
+			beta = min(alpha, self.max_value(gameboard, alpha, beta, depth - 1, moves, move))
 			gameboard[move] = 0
 			moves.append(move)
-			count += 1
-			if alpha > beta: return -2147483648
-		return beta
-	def make_move(self, model, deadline):
+			if(alpha >= beta):
+				return -2147483647
+			return beta
+
+	def make_move(self,state, deadline):
 		'''Write AI Here. Return a tuple (col, row)'''
 		width = self.model.get_width()
 		height = self.model.get_height()
@@ -69,8 +99,10 @@ class StudentAI():
 		for i in range(width):
 			for j in range(height):
 				spaces[(i,j)] = self.model.get_space(i, j)
+
 		moves = [k for k in spaces.keys() if spaces[k] == 0]
 		return self.ab_pruning(moves, spaces, 2)
+
 
 '''===================================
 DO NOT MODIFY ANYTHING BELOW THIS LINE
@@ -78,11 +110,6 @@ DO NOT MODIFY ANYTHING BELOW THIS LINE
 
 is_first_player = False
 deadline = 0
-model = None
-
-ai_piece = 1
-human_piece = -1
-no_piece = 0
 
 def make_ai_shell_from_input():
 	'''
@@ -90,7 +117,6 @@ def make_ai_shell_from_input():
 	DO NOT MODIFY THIS
 	'''
 	global is_first_player
-	global model
 	ai_shell = None
 	begin =  "makeMoveWithState:"
 	end = "end"
@@ -132,10 +158,8 @@ def make_ai_shell_from_input():
 			for col in range(col_count):
 				for row in range(row_count):
 					model.pieces[col][row] = int(mass_input[counter])
-					if (model.pieces[col][row] == ai_piece):
+					if (model.pieces[col][row] == 1):
 						count_own_moves += model.pieces[col][row]
-					if (not model.pieces[col][row] == no_piece):
-						model.spaces_left -= 1
 					counter+=1
 
 			if (count_own_moves % 2 == 0):
@@ -171,7 +195,7 @@ if __name__ == '__main__':
 	go = True
 	while (go): #do this forever until the make_ai_shell_from_input function ends the process or it is killed by the java wrapper.
 		ai_shell = make_ai_shell_from_input()
-		moveMade = ai_shell.make_move(model, deadline)
+		moveMade = ai_shell.make_move(deadline)
 		return_move(moveMade)
 		del ai_shell
 		sys.stdout.flush()

@@ -20,63 +20,112 @@ class StudentAI():
 		self.player = player
 
 	def Eval(self, gameboard, move):
-		opp_fours = self.checkForStreak(gameboard, -self.player, 4)
-		opp_threes = self.checkForStreak(gameboard, -self.player, 3)
-		opp_twos = self.checkForStreak(gameboard, -self.player, 2)
-		my_fours = self.checkForStreak(gameboard, self.player, 4)
-		my_threes = self.checkForStreak(gameboard, self.player, 3)
-		my_twos = self.checkForStreak(gameboard, self.player, 2)
-
-		if opp_fours > 0:
-			return -100000
-		else:
-			return my_fours*100000 + my_threes*100 + my_twos - (100*opp_threes + 10*opp_twos)
-
-	def checkForStreak(self, gameboard, player, streak):
-		count = 0
-		for pos in gameboard.keys():
-			if gameboard.get(pos) == player:
-				count += self.verticalStreak(pos, gameboard, streak)
-				count += self.horizontalStreak(pos, gameboard, streak)
-				count += self.diagonalStreak(pos, gameboard, streak)
-		return count
-	def verticalStreak(self, pos, gameboard, streak):
-		pass
-	def horizontalStreak(self, pos, gameboard, streak):
-		pass
-	def diagonalStreak(self, pos, gameboard, streak):
-		pass
+		score = [0, 0]
+		visited_piece_with_dir = dict()
+		for m in gameboard:
+			player = gameboard[m]
+			if gameboard[m] != 0:
+				for x,y in DIRECTIONS:
+					streak = 0
+					spaces = 0
+					if (m not in visited_piece_with_dir or (x, y) not in visited_piece_with_dir[m]):
+						if m not in visited_piece_with_dir:
+							visited_piece_with_dir[m] = [(x, y)]
+						else:
+							visited_piece_with_dir[m] += (x, y)
+						next1 = (m[0]+x, m[1]+y)
+						next2 = (m[0]-x, m[1]-y)
+						while(self.inGameboard(next1) and gameboard.get(next1) == player):
+							streak += 1
+							next1 = (next1[0]+x, next1[1]+y)
+						while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+							spaces += 1
+							next1 = (next1[0]+x, next1[1]+y)
+						while(self.inGameboard(next2) and gameboard.get(next2) == player):
+			 				streak += 1
+			 				next2 = (next2[0]-x, next2[1]-y)
+						while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+			 				spaces += 1
+			 				next2 = (next2[0]-x, next2[1]-y)
+						score[player-1] += pow(10, streak) if (streak + spaces >= 4) else 0
+		return score[0] - score[1] if self.player == 1 else score[1] - score[0]
+	# def Eval(self, gameboard, move):
+	# 	opp_fours = self.checkForStreak(gameboard, -self.player, 4)
+	# 	opp_threes = self.checkForStreak(gameboard, -self.player, 3)
+	# 	opp_twos = self.checkForStreak(gameboard, -self.player, 2)
+	# 	my_fours = self.checkForStreak(gameboard, self.player, 4)
+	# 	my_threes = self.checkForStreak(gameboard, self.player, 3)
+	# 	my_twos = self.checkForStreak(gameboard, self.player, 2)
+	#
+	# 	if opp_fours > 0:
+	# 		return -100000
+	# 	else:
+	# 		return my_fours*100000 + my_threes*100 + my_twos - (100*opp_threes + 10*opp_twos)
+	#
+	# def checkForStreak(self, gameboard, player, streak):
+	# 	count = 0
+	# 	for pos in gameboard.keys():
+	# 		if gameboard.get(pos) == player:
+	# 			count += self.verticalStreak(pos, gameboard, streak)
+	# 			count += self.horizontalStreak(pos, gameboard, streak)
+	# 			count += self.diagonalStreak(pos, gameboard, streak)
+	# 	return count
+	# def verticalStreak(self, pos, gameboard, streak):
+	# 	pass
+	# def horizontalStreak(self, pos, gameboard, streak):
+	# 	pass
+	# def diagonalStreak(self, pos, gameboard, streak):
+	# 	pass
 
 	def inGameboard(self, pos):
 		if(pos[0] < 0 or pos[1] < 0 or pos[0] > self.width-1 or pos[1] > self.height-1):
 			return False
 		return True
 
+	def hasWinner(self, gameboard, player):
+		for m in gameboard:
+			if(gameboard[m] == player):
+				for x,y in DIRECTIONS:
+					streak = 0
+				next1 = (m[0]+x, m[1]+y)
+				next2 = (m[0]-x, m[1]-y)
+				while(self.inGameboard(next1) and gameboard.get(next1) == player):
+					streak += 1
+					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next2) and gameboard.get(next2) == player):
+					streak += 1
+					next2 = (next2[0]-x, next2[1]-y)
+				if streak == 4:
+					return True
+		return False
+
+
 	def ab_pruning(self, moves, gameboard, depth):
 		alpha = -2147483648
 		beta = 2147483647
-		count = 0
 		piece = None
-		while count < len(moves):
-			move = moves.pop(0)
+		index = 0
+		for move in moves:
+			temp = moves[:]
+			temp.pop(index)
 			gameboard[move] = self.player
-			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, moves, move), move))
+			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, temp, move), move))
+			print(alpha, piece)
+			index += 1
 			gameboard[move] = 0
-			moves.append(move)
-			count += 1
 		return piece
 
 	def max_value(self, gameboard, alpha, beta, depth, moves, m):
 		if(depth == 0):
 			return self.Eval(gameboard, m)
-		count = 0
-		while count < len(moves):
-			move = moves.pop(0)
+		index = 0
+		for move in moves:
+			temp = moves[:]
+			temp.pop(index)
 			gameboard[move] = self.player
-			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves, move))
+			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, temp, move))
+			index += 1
 			gameboard[move] = 0
-			moves.append(move)
-			count += 1
 			if(alpha >= beta):
 				return 2147483647
 		return alpha
@@ -84,14 +133,14 @@ class StudentAI():
 	def min_value(self, gameboard, alpha, beta, depth, moves, m):
 		if(depth == 0):
 			return self.Eval(gameboard, m)
-		count = 0
-		while count < len(moves):
-			move = moves.pop(0)
+		index = 0
+		for move in moves:
+			temp = moves[:]
+			temp.pop(0)
 			gameboard[move] = oppoPlayer(self.player)
-			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, moves, move))
+			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, temp, move))
 			gameboard[move] = 0
-			moves.append(move)
-			count += 1
+			index += 1
 			if(alpha >= beta):
 				return -2147483647
 		return beta
@@ -105,8 +154,9 @@ class StudentAI():
 		for i in range(width):
 			for j in range(height):
 				spaces[(i,j)] = self.model.get_space(i, j)
-		moves = [k for k in spaces.keys() if spaces[k] == 0]
-		return self.ab_pruning(moves, spaces, 4)
+		moves = sorted([k for k in spaces.keys() if spaces[k] == 0])
+		return self.ab_pruning(moves, spaces, 3)
+
 
 
 '''===================================

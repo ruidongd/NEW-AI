@@ -77,6 +77,31 @@ class StudentAI():
 	# def diagonalStreak(self, pos, gameboard, streak):
 	# 	pass
 
+	def needDefense(self, gameboard, moves):
+		res = None
+		for piece in moves:
+			for x, y in DIRECTIONS:
+				pass
+				streak = 0
+				spaces = 0
+				next1 = (piece[0]+x, piece[1]+y)
+				next2 = (piece[0]-x, piece[1]-y)
+				while(self.inGameboard(next1) and gameboard.get(next1) == oppoPlayer(self.player)):
+					streak += 1
+					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next2) and gameboard.get(next2) == oppoPlayer(self.player)):
+					streak += 1
+					next2 = (next2[0]-x, next2[1]-y)
+				while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+					spaces += 1
+					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+					spaces += 1
+					next2 = (next2[0]-x, next2[1]-y)
+				if(streak >= 3 and streak + spaces >= 4):
+					res = piece
+		return res
+
 	def inGameboard(self, pos):
 		if(pos[0] < 0 or pos[1] < 0 or pos[0] > self.width-1 or pos[1] > self.height-1):
 			return False
@@ -105,15 +130,15 @@ class StudentAI():
 		beta = 2147483647
 		piece = None
 		index = 0
+		defense = self.needDefense(gameboard, moves)
 		for move in moves:
 			temp = moves[:]
 			temp.pop(index)
 			gameboard[move] = self.player
 			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, temp, move), move))
-			print(alpha, piece)
 			index += 1
 			gameboard[move] = 0
-		return piece
+		return defense if defense != None else piece
 
 	def max_value(self, gameboard, alpha, beta, depth, moves, m):
 		if(depth == 0):

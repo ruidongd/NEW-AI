@@ -7,90 +7,212 @@ import board_model as boardmodel
 
 team_name = "StudentAI-Default" #TODO change me
 DIRECTIONS = [(1,0), (1,1), (0,1), (-1,1)]
+# STREAKPOINTS = {4:300000, 3:3000, 2:650, 1:}
 
 def oppoPlayer(player):
-	if player == 1:
-		return 2
-	return 1
+	return 1 if player == -1 else -1
 
 class StudentAI():
 	def __init__(self, player, state):
 		self.last_move = state.get_last_move()
 		self.model = state
+		self.width = self.model.get_width()
+		self.height = self.model.get_height()
 		self.player = player
 
 	def Eval(self, gameboard, move):
-		return 0
-		# score = [0, 0]
-		# visited_piece_with_dir = dict()
-		# for m in gameboard:
-		# 	player = gameboard[m]
-		# 	if gameboard[m] != 0:
-		# 		for x,y in DIRECTIONS:
-		# 			streak = 0
-		# 			if (m not in visited_piece_with_dir or (x, y) not in visited_piece_with_dir[m]):
-		# 				if m not in visited_piece_with_dir:
-		# 					visited_piece_with_dir[m] = [(x, y)]
-		# 				else:
-		# 					visited_piece_with_dir[m] += (x, y)
-		# 				next1 = (m[0]+x, m[1]+y)
-		# 				next2 = (m[0]-x, m[1]-y)
-		# 				while(next1 in gameboard and gameboard[next1] == player):
-		# 					streak += 1
-		# 					next1 = (next1[0]+x, next1[1]+y)
-		# 				while(next2 in gameboard and gameboard[next2] == player):
-		# 	 				streak += 1
-		# 	 				next2 = (next2[0]-x, next2[1]-y)
-		# 				score[player-1] += pow(10, streak)
-		# return score[0] - score[1] if self.player == 1 else score[1] - score[0]
+		score = [0, 0]
+		visited_piece_with_dir = dict()
+		for m in gameboard:
+			player = gameboard[m]
+			if gameboard[m] != 0:
+				for x,y in DIRECTIONS:
+					streak = 0
+					spaces = 0
+					if (m not in visited_piece_with_dir or (x, y) not in visited_piece_with_dir[m]):
+						if m not in visited_piece_with_dir:
+							visited_piece_with_dir[m] = [(x, y)]
+						else:
+							visited_piece_with_dir[m] += (x, y)
+						next1 = (m[0]+x, m[1]+y)
+						next2 = (m[0]-x, m[1]-y)
+						while(self.inGameboard(next1) and gameboard.get(next1) == player):
+							streak += 1
+							next1 = (next1[0]+x, next1[1]+y)
+						while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+							spaces += 1
+							next1 = (next1[0]+x, next1[1]+y)
+						while(self.inGameboard(next2) and gameboard.get(next2) == player):
+			 				streak += 1
+			 				next2 = (next2[0]-x, next2[1]-y)
+						while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+			 				spaces += 1
+			 				next2 = (next2[0]-x, next2[1]-y)
+						score[player-1] += pow(10, streak) if (streak + spaces >= 4) else 0
+		return score[0] - score[1] if self.player == 1 else score[1] - score[0]
+	# def Eval(self, gameboard, move):
+	# 	opp_fours = self.checkForStreak(gameboard, -self.player, 4)
+	# 	opp_threes = self.checkForStreak(gameboard, -self.player, 3)
+	# 	opp_twos = self.checkForStreak(gameboard, -self.player, 2)
+	# 	my_fours = self.checkForStreak(gameboard, self.player, 4)
+	# 	my_threes = self.checkForStreak(gameboard, self.player, 3)
+	# 	my_twos = self.checkForStreak(gameboard, self.player, 2)
+	#
+	# 	if opp_fours > 0:
+	# 		return -100000
+	# 	else:
+	# 		return my_fours*100000 + my_threes*100 + my_twos - (100*opp_threes + 10*opp_twos)
+	#
+	# def checkForStreak(self, gameboard, player, streak):
+	# 	count = 0
+	# 	for pos in gameboard.keys():
+	# 		if gameboard.get(pos) == player:
+	# 			count += self.verticalStreak(pos, gameboard, streak)
+	# 			count += self.horizontalStreak(pos, gameboard, streak)
+	# 			count += self.diagonalStreak(pos, gameboard, streak)
+	# 	return count
+	# def verticalStreak(self, pos, gameboard, streak):
+	# 	pass
+	# def horizontalStreak(self, pos, gameboard, streak):
+	# 	pass
+	# def diagonalStreak(self, pos, gameboard, streak):
+	# 	pass
 
-	# def inGameboard(self, pos):
-	# 	if (pos[0] <= self.model.get_width() and pos[0] > 0) and (pos[1] <= self.model.get_height() and pos[1] > 0):
-	# 		return True
-	# 	return False
+	def needDefense(self, gameboard, moves):
+		streaks = [0, 0]
+		defense = None
+		for piece in moves:
+			for x, y in DIRECTIONS:
+				# defense detect
+				streak = 0
+				next1 = (piece[0] + x, piece[1] + y)
+				space1 = 0
+				next2 = (piece[0] - x, piece[1] - y)
+				space2 = 0
+				while(self.inGameboard(next1) and gameboard.get(next1) == oppoPlayer(self.player)):
+					streak += 1
+					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+					space1 += 1
+					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next2) and gameboard.get(next2) == oppoPlayer(self.player)):
+					streak += 1
+					next2 = (next2[0]-x, next2[1]-y)
+				while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+					space2 += 1
+					next2 = (next2[0]-x, next2[1]-y)
+				if space1 > 0 and space2 > 0 and streak + space1 + space2 >= 4 and streak >= 3:
+					# 活K-2
+					if(streak > streaks[1]):
+						defense = piece
+						streaks[1] = streak
+				elif (space1 > 0 or space2 > 0) and streak + space1 + space2 >=4 and streak >= 4:
+					# 死k-1
+					if(streak > streaks[1]):
+						defense = piece
+						streaks[1] = streak
+				streak_p = 0
+				next1_p = (piece[0] + x, piece[1] + y)
+				space1_p = 0
+				next2_p = (piece[0] - x, piece[1] - y)
+				space2_p = 0
+				while(self.inGameboard(next1_p) and gameboard.get(next1_p) == (self.player)):
+					streak_p += 1
+					next1_p = (next1_p[0]+x, next1_p[1]+y)
+				while(self.inGameboard(next1_p) and gameboard.get(next1_p) == 0):
+					space1_p += 1
+					next1_p = (next1_p[0]+x, next1_p[1]+y)
+				while(self.inGameboard(next2_p) and gameboard.get(next2_p) == (self.player)):
+					streak_p += 1
+					next2_p = (next2_p[0]-x, next2_p[1]-y)
+				while(self.inGameboard(next2_p) and gameboard.get(next2_p) == 0):
+					space2_p += 1
+					next2_p = (next2_p[0]-x, next2_p[1]-y)
+				if space1_p > 0 and space2_p > 0 and streak_p + space1_p + space2_p >= 4 and streak_p >= 3:
+					# 活K-2
+					if streak_p >= 4:
+						return piece
+					if(streak_p > streaks[1]):
+						streaks[0] = streak_p
+				elif (space1 > 0 or space2 > 0) and streak + space1 + space2 >=4 and streak >= 4:
+					# 死k-1
+					if(streak > streaks[1]):
+						streaks[0] = streak_p
+		return defense if streaks[1] > streaks[0] else None
+
+
+
+	def inGameboard(self, pos):
+		if(pos[0] < 0 or pos[1] < 0 or pos[0] > self.width-1 or pos[1] > self.height-1):
+			return False
+		return True
+
+	def hasWinner(self, gameboard, player):
+		for m in gameboard:
+			if(gameboard[m] == player):
+				for x,y in DIRECTIONS:
+					streak = 0
+				next1 = (m[0]+x, m[1]+y)
+				next2 = (m[0]-x, m[1]-y)
+				while(self.inGameboard(next1) and gameboard.get(next1) == player):
+					streak += 1
+					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next2) and gameboard.get(next2) == player):
+					streak += 1
+					next2 = (next2[0]-x, next2[1]-y)
+				if streak == 4:
+					return True
+		return False
+
 
 	def ab_pruning(self, moves, gameboard, depth):
 		alpha = -2147483648
 		beta = 2147483647
-		count = 0
 		piece = None
-		while count < len(moves):
-			move = moves.pop(0)
+		index = 0
+		defense = self.needDefense(gameboard, moves)
+		if(defense != None):
+			return defense
+		for move in moves:
+			temp = moves[:]
+			temp.pop(index)
 			gameboard[move] = self.player
-			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, moves, move), move))
+			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, temp, move), move))
+			index += 1
 			gameboard[move] = 0
-			moves.append(move)
 		return piece
 
 	def max_value(self, gameboard, alpha, beta, depth, moves, m):
 		if(depth == 0):
 			return self.Eval(gameboard, m)
-		count = 0
-		while count < len(moves):
-			move = moves.pop(0)
+		index = 0
+		for move in moves:
+			temp = moves[:]
+			temp.pop(index)
 			gameboard[move] = self.player
-			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, moves, move))
+			alpha = max(alpha, self.min_value(gameboard, alpha, beta, depth - 1, temp, move))
+			index += 1
 			gameboard[move] = 0
-			moves.append(move)
 			if(alpha >= beta):
 				return 2147483647
-			return alpha
+		return alpha
 
 	def min_value(self, gameboard, alpha, beta, depth, moves, m):
 		if(depth == 0):
 			return self.Eval(gameboard, m)
-		count = 0
-		while count < len(moves):
-			move = moves.pop(0)
-			gameboard[move] = self.player
-			beta = min(alpha, self.max_value(gameboard, alpha, beta, depth - 1, moves, move))
+		index = 0
+		for move in moves:
+			temp = moves[:]
+			temp.pop(0)
+			gameboard[move] = oppoPlayer(self.player)
+			beta = min(beta, self.max_value(gameboard, alpha, beta, depth - 1, temp, move))
 			gameboard[move] = 0
-			moves.append(move)
+			index += 1
 			if(alpha >= beta):
 				return -2147483647
-			return beta
+		return beta
 
-	def make_move(self,state, deadline):
+	def make_move(self, state, deadline):
 		'''Write AI Here. Return a tuple (col, row)'''
 		width = self.model.get_width()
 		height = self.model.get_height()
@@ -99,9 +221,9 @@ class StudentAI():
 		for i in range(width):
 			for j in range(height):
 				spaces[(i,j)] = self.model.get_space(i, j)
+		moves = sorted([k for k in spaces.keys() if spaces[k] == 0])
+		return self.ab_pruning(moves, spaces, 3)
 
-		moves = [k for k in spaces.keys() if spaces[k] == 0]
-		return self.ab_pruning(moves, spaces, 2)
 
 
 '''===================================

@@ -7,6 +7,7 @@ import ConnectKSource_python.board_model as boardmodel
 
 team_name = "StudentAI-Default" #TODO change me
 DIRECTIONS = [(1,0), (1,1), (0,1), (-1,1)]
+# STREAKPOINTS = {4:300000, 3:3000, 2:650, 1:}
 
 def oppoPlayer(player):
 	return 1 if player == -1 else -1
@@ -78,29 +79,78 @@ class StudentAI():
 	# 	pass
 
 	def needDefense(self, gameboard, moves):
-		res = None
+		streaks = [0, 0]
+		defense = None
 		for piece in moves:
+			s = []
 			for x, y in DIRECTIONS:
-				pass
+				# defense detect
 				streak = 0
-				spaces = 0
-				next1 = (piece[0]+x, piece[1]+y)
-				next2 = (piece[0]-x, piece[1]-y)
+				next1 = (piece[0] + x, piece[1] + y)
+				space1 = 0
+				next2 = (piece[0] - x, piece[1] - y)
+				space2 = 0
+
 				while(self.inGameboard(next1) and gameboard.get(next1) == oppoPlayer(self.player)):
 					streak += 1
 					next1 = (next1[0]+x, next1[1]+y)
+				while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+					space1 += 1
+					next1 = (next1[0]+x, next1[1]+y)
+
 				while(self.inGameboard(next2) and gameboard.get(next2) == oppoPlayer(self.player)):
 					streak += 1
 					next2 = (next2[0]-x, next2[1]-y)
-				while(self.inGameboard(next1) and gameboard.get(next1) == 0):
-					spaces += 1
-					next1 = (next1[0]+x, next1[1]+y)
 				while(self.inGameboard(next2) and gameboard.get(next2) == 0):
-					spaces += 1
+					space2 += 1
 					next2 = (next2[0]-x, next2[1]-y)
-				if(streak >= 3 and streak + spaces >= 4):
-					res = piece
-		return res
+				s.append(streak)
+				if space1 > 0 and space2 > 0 and streak + space1 + space2 >= 4 and streak >= 3:
+					# 活K-2
+					print("三三")
+					if(streak > streaks[1]):
+						defense = piece
+						streaks[1] = streak
+				elif streak + space1 + space2 >=4 and streak >= 4:
+					# 死k-1
+					print("四")
+					if(streak > streaks[1]):
+						defense = piece
+						streaks[1] = streak
+				streak_p = 0
+				next1_p = (piece[0] + x, piece[1] + y)
+				space1_p = 0
+				next2_p = (piece[0] - x, piece[1] - y)
+				space2_p = 0
+				while(self.inGameboard(next1_p) and gameboard.get(next1_p) == (self.player)):
+					streak_p += 1
+					next1_p = (next1_p[0]+x, next1_p[1]+y)
+				while(self.inGameboard(next1_p) and gameboard.get(next1_p) == 0):
+					space1_p += 1
+					next1_p = (next1_p[0]+x, next1_p[1]+y)
+				while(self.inGameboard(next2_p) and gameboard.get(next2_p) == (self.player)):
+					streak_p += 1
+					next2_p = (next2_p[0]-x, next2_p[1]-y)
+				while(self.inGameboard(next2_p) and gameboard.get(next2_p) == 0):
+					space2_p += 1
+					next2_p = (next2_p[0]-x, next2_p[1]-y)
+				if streak_p >= 4:
+					return piece
+				if space1_p > 0 and space2_p > 0 and streak_p + space1_p + space2_p >= 4 and streak_p >= 3:
+					# 活K-2
+					if(streak_p > streaks[1]):
+						streaks[0] = streak_p
+				elif streak + space1 + space2 >=4 and streak >= 4:
+					# 死k-1
+					if(streak > streaks[1]):
+						streaks[0] = streak_p
+			if(s.count(2) >= 2):
+				streaks[1] = 3
+				defense = piece
+		return defense if streaks[1] > streaks[0] else None
+
+
+
 
 	def inGameboard(self, pos):
 		if(pos[0] < 0 or pos[1] < 0 or pos[0] > self.width-1 or pos[1] > self.height-1):
@@ -131,6 +181,8 @@ class StudentAI():
 		piece = None
 		index = 0
 		defense = self.needDefense(gameboard, moves)
+		if(defense != None):
+			return defense
 		for move in moves:
 			temp = moves[:]
 			temp.pop(index)
@@ -138,7 +190,7 @@ class StudentAI():
 			(alpha, piece) = max((alpha, piece), (self.min_value(gameboard, alpha, beta, depth-1, temp, move), move))
 			index += 1
 			gameboard[move] = 0
-		return defense if defense != None else piece
+		return piece
 
 	def max_value(self, gameboard, alpha, beta, depth, moves, m):
 		if(depth == 0):

@@ -250,6 +250,7 @@ def make_ai_shell_from_input():
 	DO NOT MODIFY THIS
 	'''
 	global is_first_player
+	global deadline
 	ai_shell = None
 	begin =  "makeMoveWithState:"
 	end = "end"

@@ -145,6 +145,7 @@ class StudentAI():
 					if(streak > streaks[1]):
 						streaks[0] = streak_p
 			if(s.count(2) >= 2):
+				# need revise
 				streaks[1] = 3
 				defense = piece
 		return defense if streaks[1] > streaks[0] else None

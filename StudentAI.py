@@ -20,18 +20,26 @@ class StudentAI():
 		self.width = self.model.get_width()
 		self.height = self.model.get_height()
 		self.player = player
+	def getPiece(self, direction, piece, steps):
+		return (piece[0] + direction[0]*steps, piece[1] + direction[1]*steps)
 
 	def Eval(self, gameboard):
 		mscore = 0
 		tscore = 0
 		visited_piece_with_dir = dict()
+		for d in DIRECTIONS:
+			visited_piece_with_dir[d] = defaultdict()
 		for m in gameboard:
 			if gameboard[m] == 0:
-				mscore += self._eval(gameboard, self.player, m)
-				tscore += self._eval(gameboard, oppoPlayer(self.player), m)
+				for d in DIRECTIONS:
+					if any(!visited_piece_with_dir[d][piece] for piece in [self.getPiece(d, m, i) for i in range(1,5)]) and all(self.inGameboard(piece) for piece in [self.getPiece(d, m, i) for i in range(1,5)]):
+						pass
+						# check the streak
+
+					else:
+						continue
+				
 		return mscore - tscore
-	def _eval(self, gameboard, player, piece):
-		pass
 							#check for streak
 
 		# score = [0, 0]

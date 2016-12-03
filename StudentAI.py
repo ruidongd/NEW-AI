@@ -2,6 +2,7 @@
 from collections import defaultdict
 import random
 import sys
+import time
 sys.path.append(r'\ConnectKSource_python')
 import ConnectKSource_python.board_model as boardmodel
 
@@ -77,12 +78,107 @@ class StudentAI():
 	# 	pass
 	# def diagonalStreak(self, pos, gameboard, streak):
 	# 	pass
+	def doubleKminusThree(self, piece, gameboard, player):
+
+		streaks = []
+		for x, y in DIRECTIONS:
+			streak = 0
+			next1 = (piece[0] + x, piece[1] + y)
+			next2 = (piece[0] - x, piece[1] - y)
+			space1 = 0
+			space2 = 0
+			while(self.inGameboard(next1) and gameboard.get(next1) == oppoPlayer(self.player)):
+				streak += 1
+				next1 = (next1[0]+x, next1[1]+y)
+			while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+				space1 += 1
+				next1 = (next1[0]+x, next1[1]+y)
+			while(self.inGameboard(next2) and gameboard.get(next2) == oppoPlayer(self.player)):
+				streak += 1
+				next2 = (next2[0]-x, next2[1]-y)
+			while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+				space2 += 1
+				next2 = (next2[0]-x, next2[1]-y)
+			if(streak >= 2 and space1 > 0 and space2 > 0 and streak + space1 + space2 >= 4):
+				streaks.append(streak)
+		count = 0
+		for i in streaks:
+			if i >= 2:
+				count+= 1
+		return count >= 2
+
+			# if(self.inGameboard(next1) and gameboard.get(next1) == 0):
+			# 	next1 = (next1[0]+x, next1[1]+y)
+			# 	next2 = (piece[0] - x, piece[1] - y)
+			# 	space1 = 0
+			# 	space2 = 0
+			# 	while(self.inGameboard(next1) and gameboard.get(next1) == player):
+			# 		streak += 1
+			# 		next1 = (next1[0]+x, next1[1]+y)
+			# 	while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+			# 		space1 += 1
+			# 		next1 = (next1[0]+x, next1[1]+y)
+			# 	while(self.inGameboard(next2) and gameboard.get(next2) == player):
+			# 		streak += 1
+			# 		next2 = (next2[0]+x, next2[1]+y)
+			# 	while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+			# 		space2 += 1
+			# 		next2 = (next2[0]-x, next2[1]-y)
+			# 	if streak >= 2 and space1 > 0 and space2 > 0 and streak + space1 +space2 >= 3:
+			# 		streaks.append(streak)
+			# elif(self.inGameboard(next2) and gameboard.get(next2) == 0):
+			# 	next2 = (next2[0]+x, next2[1]+y)
+			# 	next1 = (piece[0] + x, piece[1] + y)
+			# 	space1 = 0
+			# 	space2 = 0
+			# 	while(self.inGameboard(next1) and gameboard.get(next1) == player):
+			# 		streak += 1
+			# 		next1 = (next1[0]+x, next1[1]+y)
+			# 	while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+			# 		space1 += 1
+			# 		next1 = (next1[0]+x, next1[1]+y)
+			# 	while(self.inGameboard(next2) and gameboard.get(next2) == player):
+			# 		streak += 1
+			# 		next2 = (next2[0]+x, next2[1]+y)
+			# 	while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+			# 		space2 += 1
+			# 		next2 = (next2[0]-x, next2[1]-y)
+			# 	if streak >= 2 and space1 > 0 and space2 > 0 and streak + space1 +space2 >= 3:
+			# 		streaks.append(streak)
+			# else:
+			# 	next1 = (piece[0] + x, piece[1] + y)
+			# 	next2 = (piece[0] - x, piece[1] - y)
+			# 	space1 = 0
+			# 	space2 = 0
+			# 	while(self.inGameboard(next1) and gameboard.get(next1) == player):
+			# 		streak += 1
+			# 		next1 = (next1[0]+x, next1[1]+y)
+			# 	while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+			# 		space1 += 1
+			# 		next1 = (next1[0]+x, next1[1]+y)
+			# 	while(self.inGameboard(next2) and gameboard.get(next2) == player):
+			# 		streak += 1
+			# 		next2 = (next2[0]+x, next2[1]+y)
+			# 	while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+			# 		space2 += 1
+			# 		next2 = (next2[0]-x, next2[1]-y)
+			# 	if streak >= 2 and space1 > 0 and space2 > 0 and streak + space1 +space2 >= 4:
+			# 		streaks.append(streak)
+			# if piece == (6, 3):
+			# 	print(streak, space1, space2)
+
+
+
 
 	def needDefense(self, gameboard, moves):
-		streaks = [0, 0]
+		mstreak = 0
+		tstreak = 0
 		defense = None
 		for piece in moves:
-			s = []
+			if(self.doubleKminusThree(piece, gameboard, oppoPlayer(self.player))) and tstreak <= 3:
+				print("HELLO")
+				defense = piece
+				tstreak = 3
 			for x, y in DIRECTIONS:
 				# defense detect
 				streak = 0
@@ -104,19 +200,17 @@ class StudentAI():
 				while(self.inGameboard(next2) and gameboard.get(next2) == 0):
 					space2 += 1
 					next2 = (next2[0]-x, next2[1]-y)
-				s.append(streak)
+
 				if space1 > 0 and space2 > 0 and streak + space1 + space2 >= 4 and streak >= 3:
 					# 活K-2
-					print("三三")
-					if(streak > streaks[1]):
+					if(streak > tstreak):
 						defense = piece
-						streaks[1] = streak
+						tstreak = streak
 				elif streak + space1 + space2 >=4 and streak >= 4:
 					# 死k-1
-					print("四")
-					if(streak > streaks[1]):
+					if(streak > tstreak):
 						defense = piece
-						streaks[1] = streak
+						tstreak = streak
 				streak_p = 0
 				next1_p = (piece[0] + x, piece[1] + y)
 				space1_p = 0
@@ -138,17 +232,13 @@ class StudentAI():
 					return piece
 				if space1_p > 0 and space2_p > 0 and streak_p + space1_p + space2_p >= 4 and streak_p >= 3:
 					# 活K-2
-					if(streak_p > streaks[1]):
-						streaks[0] = streak_p
-				elif streak + space1 + space2 >=4 and streak >= 4:
+					if(streak_p > mstreak):
+						mstreak = streak_p
+				elif streak_p + space1_p + space2_p >=4 and streak_p >= 4:
 					# 死k-1
-					if(streak > streaks[1]):
-						streaks[0] = streak_p
-			if(s.count(2) >= 2):
-				# need revise
-				streaks[1] = 3
-				defense = piece
-		return defense if streaks[1] > streaks[0] else None
+					if(streak_p > mstreak):
+						mstreak = streak_p
+		return defense if tstreak > mstreak else None
 
 
 
@@ -174,6 +264,13 @@ class StudentAI():
 				if streak == 4:
 					return True
 		return False
+	def IDS(self, moves, gameboard, depth):
+		piece = None
+		# print(depth)
+		for i in range(1, depth):
+			print(i)
+			piece = self.ab_pruning(moves, gameboard, i)
+		return piece
 
 
 	def ab_pruning(self, moves, gameboard, depth):
@@ -225,6 +322,7 @@ class StudentAI():
 
 	def make_move(self, deadline):
 		'''Write AI Here. Return a tuple (col, row)'''
+		a = time.time()
 		width = self.model.get_width()
 		height = self.model.get_height()
 		spaces = defaultdict(int)
@@ -233,7 +331,10 @@ class StudentAI():
 			for j in range(height):
 				spaces[(i,j)] = self.model.get_space(i, j)
 		moves = sorted([k for k in spaces.keys() if spaces[k] == 0])
-		return self.ab_pruning(moves, spaces, 3)
+		piece = self.ab_pruning(moves, spaces, 4)
+		b = time.time()
+		print(b-a)
+		return piece
 
 
 

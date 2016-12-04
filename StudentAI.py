@@ -13,6 +13,10 @@ DIRECTIONS = [(1,0), (1,1), (0,1), (-1,1)]
 def oppoPlayer(player):
 	return 1 if player == -1 else -1
 
+def distanceSort(center, pos)->int:
+	# A sort function that gives a high proprity to those pieces are close to the center
+	return max(abs(pos[0]-center[0]), abs(pos[1]-center[1]))
+
 class StudentAI():
 	def __init__(self, player, state):
 		self.last_move = state.get_last_move()
@@ -187,9 +191,7 @@ class StudentAI():
 							else:
 								mscore += 3900 if player == self.player else 0
 								tscore += 3900 if player != self.player else 0
-						elif streak >= 3 and (space1 > 0 or space2 > 0)
-
-
+						# elif streak >= 3 and (space1 > 0 or space2 > 0)
 		return mscore - tscore
 
 	def doubleKminusThree(self, piece, gameboard, player):
@@ -445,6 +447,7 @@ class StudentAI():
 			for j in range(height):
 				spaces[(i,j)] = self.model.get_space(i, j)
 		moves = sorted([k for k in spaces.keys() if spaces[k] == 0])
+		print(sorted(moves, key = lambda x: distanceSort((4, 4), x)))
 		# piece = self.ab_pruning(moves, spaces, 3)
 		b = time.time()
 		print(b-a)

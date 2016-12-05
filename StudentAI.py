@@ -353,7 +353,7 @@ class StudentAI():
 				if(i != 1):
 					moves.sort(key = lambda x: distanceSort(piece, x))
 				piece = self.ab_pruning(moves, gameboard, i, timer)
-				i += 1
+				i += 2
 			return piece
 
 

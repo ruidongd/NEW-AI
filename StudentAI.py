@@ -347,7 +347,7 @@ class StudentAI():
 			# print(depth)
 			i = 1
 			while(i <= 50):
-				if time.time() - timer > (deadline - 100) / 10000:
+				if time.time() - timer > (deadline - 100) / 10000 + 1:
 					return piece
 				print("going to depth :", i)
 				if(i != 1):
@@ -363,8 +363,8 @@ class StudentAI():
 		piece = None
 		index = 0
 		for move in moves:
-			if time.time() - timer >= (deadline - 100) / 10000:
-				break
+			if time.time() - timer >= (deadline - 100) / 10000 + 1:
+				return piece
 			temp = moves[:]
 			temp.pop(index)
 			gameboard[move] = self.player
@@ -378,8 +378,8 @@ class StudentAI():
 			return self.Eval(gameboard)
 		index = 0
 		for move in moves:
-			if time.time() - timer >= (deadline - 100) / 10000:
-				break
+			if time.time() - timer >= (deadline - 100) / 10000 + 1:
+				return alpha
 			temp = moves[:]
 			temp.pop(index)
 			gameboard[move] = self.player
@@ -395,8 +395,8 @@ class StudentAI():
 			return self.Eval(gameboard)
 		index = 0
 		for move in moves:
-			if time.time() - timer >= (deadline - 100) / 10000:
-				break
+			if time.time() - timer >= (deadline - 100) / 10000 + 1:
+				return beta
 			temp = moves[:]
 			temp.pop(0)
 			gameboard[move] = oppoPlayer(self.player)

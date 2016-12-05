@@ -78,9 +78,11 @@ class StudentAI():
 	# 		# 1*11
 	# 		elif(self.getPieceScore(gameboard,x, y, m, 1) == player and self.getPieceScore(gameboard,x, y, m, 2) == player and self.getPieceScore(gameboard,x, y, m, -1) == player):
 	# 			if(self.getPieceScore(gameboard,x, y, 3) == 0 and self.getPieceScore(gameboard,x, y, m, -2) == 0):
+	#
 	# 				score += 3750
 	# 				numOfThreeStreak += 1
 	# 			elif(self.getPieceScore(gameboard,x, y, m, 3) == oppoPlayer(player) or self.getPieceScore(gameboard,x, y, m, 3) == 10) and (self.getPieceScore(gameboard,x, y, i, -2) == oppoPlayer(player) or self.getPieceScore(gameboard,x, y, i, -2) == 10):
+	#				210112 or 211012
 	# 				score += 0
 	# 			else:
 	# 				score += 1350
@@ -117,45 +119,7 @@ class StudentAI():
 	# 	return score
 
 	def Eval(self, gameboard):
-		score = [0, 0]
-		visited_piece_with_dir = dict()
-		for d in DIRECTIONS:
-			visited_piece_with_dir[d] = defaultdict(bool)
-		for m in gameboard:
-			if gameboard[m] != 0:
-				player = gameboard[m]
-				for x,y in DIRECTIONS:
-					streak = 0
-					space1 = 0
-					space2 = 0
-					if visited_piece_with_dir[(x, y)][m] == False:
-						visited_piece_with_dir[(x, y)][m] = True
-						next1 = (m[0]+x, m[1]+y)
-						next2 = (m[0]-x, m[1]-y)
-						while(self.inGameboard(next1) and gameboard.get(next1) == player):
-							streak += 1
-							visited_piece_with_dir[(x, y)][next1] = True
-							next1 = (next1[0]+x, next1[1]+y)
-						while(self.inGameboard(next1) and gameboard.get(next1) == 0):
-							space1 += 1
-							next1 = (next1[0]+x, next1[1]+y)
-						while(self.inGameboard(next2) and gameboard.get(next2) == player):
-							streak += 1
-							visited_piece_with_dir[(x, y)][next2] = True
-							next2 = (next2[0]-x, next2[1]-y)
-						while(self.inGameboard(next2) and gameboard.get(next2) == 0):
-							space2 += 1
-							next2 = (next2[0]-x, next2[1]-y)
-						# 011110
-						# if streak >= 4 and space1 > 0 and space2 >0:
-						# 	score
-						if player == self.player:
-							score[0] += pow(10, streak) if (streak + space1 + space2 >= 4) else 0
-						else:
-							score[1] += pow(10, streak) if (streak + space1 + space2 >= 4) else 0
-		return score[0] - score[1]
-		# mscore = 0
-		# tscore = 0
+		# score = [0, 0]
 		# visited_piece_with_dir = dict()
 		# for d in DIRECTIONS:
 		# 	visited_piece_with_dir[d] = defaultdict(bool)
@@ -163,7 +127,7 @@ class StudentAI():
 		# 	if gameboard[m] != 0:
 		# 		player = gameboard[m]
 		# 		for x,y in DIRECTIONS:
-		# 			streak = 1
+		# 			streak = 0
 		# 			space1 = 0
 		# 			space2 = 0
 		# 			if visited_piece_with_dir[(x, y)][m] == False:
@@ -184,36 +148,189 @@ class StudentAI():
 		# 				while(self.inGameboard(next2) and gameboard.get(next2) == 0):
 		# 					space2 += 1
 		# 					next2 = (next2[0]-x, next2[1]-y)
-		# 				if streak >= 4 and space1 > 0 and space2 > 0:
-		# 					# 011110
-		# 					mscore += 300000 if player == self.player else 0
-		# 					tscore += 300000 if player != self.player else 0
-		# 				elif streak >= 4 and (space1 > 0  or space2 > 0):
-		# 					# 011112
-		# 					mscore += 250000 if player == self.player else 0
-		# 					tscore += 250000 if player != self.player else 0
-		# 				elif streak >=3 and space1 > 0 and space2 >0:
-		# 					# 01110
-		# 					if space1 == 1 and space2 == 1:
-		# 						tstreak = 0
-		# 						if(self.inGameboard(next1) and gameboard.get(next1) == player):
-		# 							tstreak += 1
-		# 							visited_piece_with_dir[(x, y)][next1] = True
-		# 						elif(self.inGameboard(next2) and gameboard.get(next2) == player):
-		# 							streak += 1
-		# 							visited_piece_with_dir[(x, y)][next2] = True
-		# 						if tstreak == 1:
-		# 							# 011101 or 101110
-		# 							mscore += 240000 if player == self.player else 0
-		# 							tscore += 240000 if player != self.player else 0
-		# 						else:
-		# 							mscore += 3900 if player == self.player else 0
-		# 							tscore += 3900 if player != self.player else 0
-		# 					else:
-		# 						mscore += 3900 if player == self.player else 0
-		# 						tscore += 3900 if player != self.player else 0
-		# 				# elif streak >= 3 and (space1 > 0 or space2 > 0)
-		# return mscore - tscore
+		# 				# 011110
+		# 				# if streak >= 4 and space1 > 0 and space2 >0:
+		# 				# 	score
+		# 				if player == self.player:
+		# 					score[0] += pow(10, streak) if (streak + space1 + space2 >= 4) else 0
+		# 				else:
+		# 					score[1] += pow(10, streak) if (streak + space1 + space2 >= 4) else 0
+		# return score[0] - score[1]
+		mscore = 0
+		tscore = 0
+		visited_piece_with_dir = dict()
+		for d in DIRECTIONS:
+			visited_piece_with_dir[d] = defaultdict(bool)
+		for m in gameboard:
+			if gameboard[m] != 0:
+				player = gameboard[m]
+				numOfTwo = 0
+				for x,y in DIRECTIONS:
+					streak = 1
+					space1 = 0
+					space2 = 0
+					if visited_piece_with_dir[(x, y)][m] == False:
+						visited_piece_with_dir[(x, y)][m] = True
+						next1 = (m[0]+x, m[1]+y)
+						next2 = (m[0]-x, m[1]-y)
+						while(self.inGameboard(next1) and gameboard.get(next1) == player):
+							streak += 1
+							visited_piece_with_dir[(x, y)][next1] = True
+							next1 = (next1[0]+x, next1[1]+y)
+						while(self.inGameboard(next1) and gameboard.get(next1) == 0):
+							space1 += 1
+							next1 = (next1[0]+x, next1[1]+y)
+						while(self.inGameboard(next2) and gameboard.get(next2) == player):
+							streak += 1
+							visited_piece_with_dir[(x, y)][next2] = True
+							next2 = (next2[0]-x, next2[1]-y)
+						while(self.inGameboard(next2) and gameboard.get(next2) == 0):
+							space2 += 1
+							next2 = (next2[0]-x, next2[1]-y)
+						#
+						if streak >= 4:
+							if space1 > 0 and space2 > 0:
+							# 011110
+								if player == self.player:
+									mscore += 300000
+								else:
+									tscore += 300000
+							elif (space1 > 0 or space2 > 0):
+								# 011112 or 211110
+								if player == self.player:
+									mscore += 250000
+								else:
+									tscore += 250000
+						elif streak == 3:
+							# 111
+							if (space1 == 1 and gameboard.get(next1) == player) or (space2 == 0 and gameboard.get(next2) == player):
+								# 11101 or 011101 or 10111 or 010111
+								if space1 == 1 and gameboard.get(next1) == player:
+									visited_piece_with_dir[(x, y)][next1] = True
+								else:
+									visited_piece_with_dir[(x, y)][next2] = True
+
+								if player == self.player:
+									mscore += 240000
+								else:
+									tscore += 240000
+							elif space1 > 0 and space2 > 0:
+								# 01110
+								if (space1 == 1 and gameboard.get(next1) != 0) or (space2 == 0 and gameboard.get(next2) != 0):
+									# 201110 or 011102
+									if player == self.player:
+										mscore += 500
+									else:
+										tscore += 500
+								else:
+									# 01110
+									if player == self.player:
+										mscore += 3900
+									else:
+										tscore += 3900
+							elif space1 > 0 or space2 > 0 and streak + space1 + space2 >= 5:
+								# 11100 or 00111
+								mscore += 750 if player == self.player else 0
+								tscore += 750 if player != self.player else 0
+						elif streak == 2 and ((space1 == 1 and gameboard.get(next1) == player)or (space2 == 1 and gameboard.get(next2))):
+							# 1011 or 1101
+							if space1 == 1 and gameboard.get(next1) == player:
+								visited_piece_with_dir[(x, y)][next1] = True
+							else:
+								visited_piece_with_dir[(x, y)][next2] = True
+							if (space1 == 1 and gameboard.get(next1) == player and gameboard.get(self.getPiece(x, y, next1, 1)) == player):
+								# 11011
+								visited_piece_with_dir[(x, y)][self.getPiece(x, y, next1, 1)] = True
+								if player == self.player:
+									mscore += 230000
+								else:
+									tscore += 230000
+							elif (space2 == 1 and gameboard.get(next2) == player and gameboard.get(self.getPiece(x, y, next2, -1)) == player):
+								# 11011
+								visited_piece_with_dir[(x, y)][self.getPiece(x, y, next2, -1)] = True
+								if player == self.player:
+									mscore += 230000
+								else:
+									tscore += 230000
+							elif space1 == 1 and space2 > 0 and gameboard.get(next1) == player and gameboard.get(self.getPiece(x, y, next1, 1)) ==0:
+								# 011010
+								if player == self.player:
+									mscore += 3750
+								else:
+									tscore += 3750
+							elif space2 == 1 and space1 > 0 and gameboard.get(next2) == player and gameboard.get(self.getPiece(x, y, next2, -1)) == 0:
+								# 010110
+								if player == self.player:
+									mscore += 3750
+								else:
+									tscore += 3750
+							elif space1 == 1 and gameboard.get(next1) == player and space2 == 0 and (gameboard.get(self.getPiece(x, y, next1, 1)) == oppoPlayer(player) or self.inGameboard(self.getPiece(x, y, next1, 1)) == False):
+								# 211012
+								pass
+							elif space2 == 1 and space1 == 0 and gameboard.get(next2) == player and (gameboard.get(self.getPiece(x, y, next2, -1)) == oppoPlayer(player) or self.inGameboard(self.getPiece(x, y, next2, -1)) == False):
+								# 210112
+								pass
+							else:
+								if player == self.player:
+									mscore += 1350
+								else:
+									tscore += 1350
+						elif streak == 2 and space1 > 0 and space2 > 0 and streak + space1 + space2 >= 5:
+							# 00110
+							numOfTwo += 1
+							if player == self.player:
+								mscore += 600
+							else:
+								tscore += 600
+						elif streak == 2 and (space1 > 0 or space2 > 0) and streak + space1 + space2 >= 5:
+							if player == self.player:
+								mscore += 300
+							else:
+								tscore += 300
+						elif streak == 1 and ((space1 == 1 and gameboard.get(next1) == player) or (space2 == 1 and gameboard.get(next2) == player)):
+							# 101
+							if space1 == 1 and gameboard.get(next1) == player:
+								visited_piece_with_dir[(x, y)][next1] = True
+							else:
+								visited_piece_with_dir[(x, y)][next2] = True
+							if space2 > 0 and space1 == 1 and gameboard.get(next1) == player and gameboard.get(self.getPiece(x, y, next1, 1)) == player and gameboard.get(self.getPiece(x, y, next1, 2)) == 0:
+								# 010110
+								visited_piece_with_dir[(x, y)][self.getPiece(x, y, next1, 1)] = True
+								if player == self.player:
+									mscore += 3750
+								else:
+									tscore += 3750
+							elif space1 > 0 and space2 == 1 and gameboard.get(next2) == player and gameboard.get(self.getPiece(x, y, next2, -1)) == player and gameboard.get(self.getPiece(x, y, next2, -2)) == 0:
+							# 011010
+								visited_piece_with_dir[(x, y)][self.getPiece(x, y, next2, -1)] = True
+								if player == self.player:
+									mscore += 3750
+								else:
+									tscore += 3750
+							elif space1 == 0 and space2 == 1 and gameboard.get(next2) == player and gameboard.get(self.getPiece(x, y, next2, -1)) == player and (gameboard.get(self.getPiece(x, y, next2, -2)) == oppoPlayer(player) or self.inGameboard(self.getPiece(x, y, next2, -2)) == False):
+								pass
+								# 211012
+							elif space1 == 1 and space2 == 0 and gameboard.get(next1) == player and gameboard.get(self.getPiece(x, y, next1, 1)) == player and (gameboard.get(self.getPiece(x, y, next1, 2)) == oppoPlayer(player) or self.inGameboard(self.getPiece(x, y, next1, 2)) == False):
+								pass
+								# 210112
+							elif ((space1 == 1 and gameboard.get(next1) == player and gameboard.get(self.getPiece(x, y, next1, 1)) == player) or (space2 == 1 and gameboard.get(next2) == player and gameboard.get(self.getPiece(x, y, next2, -1) == player))):
+								if space1 == 1 and gameboard.get(next1) == player:
+									visited_piece_with_dir[(x, y)][self.getPiece(x, y, next1, 1)] = True
+								else:
+									visited_piece_with_dir[(x, y)][self.getPiece(x, y, next2, -1)] = True
+								# 1101
+								if player == self.player:
+									mscore += 1350
+								else:
+									tscore += 1350
+							elif (space1 == 1 and gameboard.get(next1) == player and gameboard.get(self.getPiece(x, y, next1, 1)) == 0 and space2 > 0) or (space2 == 1 and space1 > 0 and gameboard.get(next2) == player and gameboard.get(self.getPiece(x, y, next2, -1)) == 0):
+								# 01010
+								numOfTwo += 1
+								if player == self.player:
+									mscore += 500
+								else:
+									tscore += 500
+		return mscore - tscore
 
 	def doubleKminusThree(self, piece, gameboard, player):
 
@@ -274,7 +391,7 @@ class StudentAI():
 					space2 += 1
 					next2 = (next2[0]-x, next2[1]-y)
 
-				if space1 > 0 and space2 > 0 and streak + space1 + space2 >= 4 and streak >= 2:
+				if space1 > 0 and space2 > 0 and streak + space1 + space2 >= 4 and streak >= 3:
 					# 活K-2
 					if(streak > tstreak):
 						defense = piece
@@ -318,6 +435,8 @@ class StudentAI():
 
 
 	def inGameboard(self, pos):
+		if not pos:
+			return False
 		if(pos[0] < 0 or pos[1] < 0 or pos[0] > self.width-1 or pos[1] > self.height-1):
 			return False
 		return True
@@ -347,7 +466,7 @@ class StudentAI():
 			# print(depth)
 			i = 1
 			while(i <= 50):
-				if time.time() - timer > (deadline - 100) / 10000 + 1:
+				if time.time() - timer > (deadline - 100) / 1000:
 					return piece
 				print("going to depth :", i)
 				if(i != 1):
@@ -363,7 +482,7 @@ class StudentAI():
 		piece = None
 		index = 0
 		for move in moves:
-			if time.time() - timer >= (deadline - 100) / 10000 + 1:
+			if time.time() - timer > (deadline - 100) / 1000:
 				return piece
 			temp = moves[:]
 			temp.pop(index)
@@ -378,7 +497,7 @@ class StudentAI():
 			return self.Eval(gameboard)
 		index = 0
 		for move in moves:
-			if time.time() - timer >= (deadline - 100) / 10000 + 1:
+			if time.time() - timer > (deadline - 100) / 1000:
 				return alpha
 			temp = moves[:]
 			temp.pop(index)
@@ -395,7 +514,7 @@ class StudentAI():
 			return self.Eval(gameboard)
 		index = 0
 		for move in moves:
-			if time.time() - timer >= (deadline - 100) / 10000 + 1:
+			if time.time() - timer > (deadline - 100) / 1000:
 				return beta
 			temp = moves[:]
 			temp.pop(0)
@@ -468,7 +587,7 @@ def make_ai_shell_from_input():
 
 			#add the deadline here:
 			deadline = -1
-			deadline = int(mass_input[6]) * 10
+			deadline = int(mass_input[6])
 			k = int(mass_input[7])
 			#now the values for each space.
 
